@@ -118,9 +118,76 @@
     .fade-out {
       opacity: 0;
     }
+
+    #popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+
+    #popup-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    #popup-content p {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    #popup-content button {
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
   </style>
 </head>
+
+<script>
+  function closePopup() {
+    const popup = document.getElementById('popup');
+    popup.classList.add('fade-out');
+    setTimeout(() => {
+      popup.style.display = 'none';
+    }, 500); // 페이드 아웃 시간과 일치
+  }
+
+  // ✅ 팝업 진입 후 7초 지나면 자동 종료
+  setTimeout(() => {
+    closePopup();
+  }, 8000);
+</script>
+
 <body>
+  <div id="popup">
+    <div id="popup-content">
+      <p><strong>Worldwide Air (WWA)를 찾아주셔서 감사합니다.</strong><br>
+      WWA는 현재 총 15개국의 직항 노선을 통해 시범 운항 중입니다.<br>
+      2025년 6월부터 현재까지의 소식들을 여행해 보실 수 있습니다.</p>
+      <p><strong>&lt;공지 사항&gt;</strong><br>
+      GDELT 이슈로 인해 6월 셋째 주와 넷째 주의 항공편이 결항되었습니다.<br>
+      이용에 참고 부탁드립니다.</p>
+      <button onclick="closePopup()">확인</button>
+    </div>
+  </div>
 
   <div id="main-content">
     <h1 translate="no">Worldwide Air</h1>
@@ -208,15 +275,8 @@
       soundBtn.classList.add('fade-out');
 
       setTimeout(() => {
-        video.pause();
-        video.style.display = 'none';
-        overlay.style.display = 'none';
-        soundBtn.style.display = 'none';
-
-        video.classList.remove('fade-out');
-        overlay.classList.remove('fade-out');
-        soundBtn.classList.remove('fade-out');
-      }, 500);
+        location.reload();  // ⬅️ 영상이 꺼지는 대신 페이지 새로고침
+      }, 500); // 페이드아웃 완료 후 새로고침
     }
 
     overlay.addEventListener('click', hideVideo);
