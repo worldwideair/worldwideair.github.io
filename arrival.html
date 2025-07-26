@@ -154,9 +154,50 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.15);
       z-index: 1000;
     }
+    #initial-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #initial-popup-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 90vw;
+      text-align: center;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    #initial-popup-content button {
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.2rem;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <div id="initial-popup">
+    <div id="initial-popup-content">
+      <p><strong>안내사항</strong><br>
+      "기사 보기" 버튼으로 원문을 여행하신 후,<br>
+      다음 분들이 여정에 참여하실 수 있도록 꼭 <strong>원문 탭을 닫아주세요.</strong></p>
+      <button onclick="closeInitialPopup()">확인</button>
+    </div>
+  </div>
+
   <p style="display: none;">
     This paragraph exists solely to help your web browser recognize the original language of this page as English. 
     If you are using a browser like Safari or Chrome that supports automatic translation, this content may help trigger a translation suggestion banner when the page loads. 
@@ -274,6 +315,15 @@
         }, 9000);
       }, 30000);
     }
+
+    function closeInitialPopup() {
+      const popup = document.getElementById('initial-popup');
+      popup.style.display = 'none';
+    }
+
+    setTimeout(() => {
+      closeInitialPopup();
+    }, 10000); // 10초 후 자동 닫힘
 
     ["mousemove", "mousedown", "keydown", "touchstart"].forEach(evt =>
       document.addEventListener(evt, resetTimers)
