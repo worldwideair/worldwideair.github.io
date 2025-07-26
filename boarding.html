@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>여정 선택 - Worldwide Air</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,800;1,800&family=Poppins:ital,wght@0,400;0,500;0,600;0,800;1,800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background-color: #f4f4f4;
+      position: relative;
+    }
+    #top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .logo {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-style: italic;
+      font-size: 1.5rem;
+      color: #003366;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    form#journey-form {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    select {
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      height: 35px;
+      width: 100px;
+    }
+    .search-button {
+      height: 35px;
+      padding: 0 1rem;
+      background-color: #003366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .search-button:hover {
+      background-color: #ccc;
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #003366;
+      margin-bottom: 1rem;
+    }
+    .flight-block {
+      background: white;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .flight-block:hover {
+      background-color: #f9f9f9;
+    }
+    .flight-title {
+      font-size: 0.95rem;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+    }
+    .flight-meta {
+      font-size: 0.9rem;
+      color: #555;
+      margin-left: 1rem;
+      white-space: nowrap;
+    }
+    .center-message {
+      text-align: center;
+      margin-top: 4rem;
+      font-size: 1.2rem;
+      color: #777;
+    }
+
+    /* 🔸 알림 박스 스타일 */
+    #idle-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      color: #333;
+      font-size: 1rem;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="top-bar">
+    <a class="logo" href="index.html">Worldwide Air</a>
+
+    <form id="journey-form">
+      <select id="departure-country">
+        <option value="KOR">한국</option>
+        <option value="USA">미국</option>
+        <option value="JPN">일본</option>
+        <option value="IRN">이란</option>
+        <option value="ISR">이스라엘</option>
+        <option value="UKR">우크라이나</option>
+        <option value="RUS">러시아</option>
+        <option value="IND">인도</option>
+        <option value="FRA">프랑스</option>
+        <option value="THA">태국</option>
+        <option value="ZAF">남아공</option>
+        <option value="AUS">호주</option>
+        <option value="EGY">이집트</option>
+        <option value="MEX">멕시코</option>
+        <option value="BRA">브라질</option>
+      </select>
+
+      <select id="week">
+        <option value="2025-06-W1">6월 1주차</option>
+        <option value="2025-06-W2">6월 2주차</option>
+        <option value="2025-06-W3">6월 3주차</option>
+        <option value="2025-06-W4">6월 4주차</option>
+        <option value="2025-07-W1">7월 1주차</option>
+        <option value="2025-07-W2">7월 2주차</option>
+        <option value="2025-07-W3">7월 3주차</option>
+        <option value="2025-07-W4">7월 4주차</option>
+        <option value="2025-08-W1">8월 1주차</option>
+        <option value="2025-08-W2">8월 2주차</option>
+      </select>
+
+      <button class="search-button" type="submit">여정 검색</button>
+    </form>
+  </div>
+
+  <div id="flight-section"></div>
+
+  <div id="idle-popup">10초 동안 활동이 없으면 여정 탐색이 종료됩니다.</div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedCountry = urlParams.get("country");
+    const selectedWeek = urlParams.get("week");
+
+    if (selectedCountry) document.getElementById("departure-country").value = selectedCountry;
+    if (selectedWeek) document.getElementById("week").value = selectedWeek;
+
+    const apiKey = "AIzaSyAwT4PTt4fce8qxpyUedKsTKyCAaHtIzfU";
+    const sheetId = "1ZBsOtyhmiwka1SC0yYSiSLX3-bi0b-sQHu24GuCRhzA";
+
+    let sheetName = "";
+    try {
+      const [year, month, week] = selectedWeek.split("-");
+      sheetName = `flight_${year.slice(2)}${month}w${week.slice(1)}`;
+    } catch {
+      document.getElementById("flight-section").innerHTML = `<div class="center-message">주차 형식이 잘못되었습니다.</div>`;
+      throw new Error("Invalid week format");
+    }
+
+    const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
+
+    fetch(endpoint)
+      .then(res => res.json())
+      .then(data => {
+        const rows = data.values;
+        if (!rows || rows.length < 2) throw new Error("데이터 없음");
+        const headers = rows[0];
+        const body = rows.slice(1);
+        const col = name => headers.indexOf(name);
+        const byEvent = {};
+        body.forEach(row => {
+          if (row[col("Countrycode")] !== selectedCountry) return;
+          const id = row[col("GLOBALEVENTID")];
+          const rank = parseInt(row[col("event_rank")]) || 9999;
+          const summary = row[col("GLOBALEVENTID_summary")];
+          if (!byEvent[id] && summary?.trim()) {
+            byEvent[id] = { summary, minEventRank: rank, count: 1 };
+          } else if (byEvent[id]) {
+            byEvent[id].count++;
+            if (rank < byEvent[id].minEventRank) byEvent[id].minEventRank = rank;
+          }
+        });
+        const section = document.getElementById("flight-section");
+        section.innerHTML = "";
+        const events = Object.entries(byEvent).sort(([, a], [, b]) => a.minEventRank - b.minEventRank);
+        if (!events.length) {
+          section.innerHTML = `<div class="center-message">항공편을 찾을 수 없습니다.</div>`;
+          return;
+        }
+        const title = document.createElement("div");
+        title.className = "section-title";
+        title.textContent = "항공편 선택";
+        section.appendChild(title);
+        events.forEach(([eventId, data]) => {
+          const block = document.createElement("div");
+          block.className = "flight-block";
+          block.onclick = () =>
+            location.href = `arrival.html?event=${eventId}&country=${selectedCountry}&week=${selectedWeek}`;
+          block.innerHTML = `<div class="flight-title">${data.summary}</div><div class="flight-meta">검색 수: ${data.count}건</div>`;
+          section.appendChild(block);
+        });
+      })
+      .catch(() => {
+        document.getElementById("flight-section").innerHTML = `<div class="center-message">항공편을 찾을 수 없습니다.</div>`;
+      });
+
+    document.getElementById("journey-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const country = document.getElementById("departure-country").value;
+      const week = document.getElementById("week").value;
+      window.location.href = `boarding.html?country=${country}&week=${week}`;
+    });
+
+    // ⏱️ 비활성 감지 타이머
+    let idleTimer, popupTimer, redirectTimer;
+    const popup = document.getElementById("idle-popup");
+
+    function resetTimers() {
+      clearTimeout(idleTimer);
+      clearTimeout(popupTimer);
+      clearTimeout(redirectTimer);
+      popup.style.display = "none";
+      idleTimer = setTimeout(() => {
+        popup.style.display = "block";
+        popupTimer = setTimeout(() => {
+          popup.style.display = "none";
+          redirectTimer = setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1000);
+        }, 9000);
+      }, 30000);
+    }
+
+    ["mousemove", "mousedown", "keydown", "touchstart"].forEach(evt =>
+      document.addEventListener(evt, resetTimers)
+    );
+    resetTimers();
+  </script>
+</body>
+</html>
