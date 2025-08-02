@@ -13,6 +13,25 @@
       background-color: #f4f4f4;
       position: relative;
     }
+
+    /* 🔹 로딩 오버레이 */
+    #loading-overlay {
+      position: fixed;
+      z-index: 2000;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #loading-overlay video {
+      width: 200px;
+      height: auto;
+      pointer-events: none;
+    }
+
     #top-bar {
       display: flex;
       justify-content: space-between;
@@ -88,8 +107,6 @@
       font-size: 1.2rem;
       color: #777;
     }
-
-    /* 🔸 알림 박스 스타일 */
     #idle-popup {
       display: none;
       position: fixed;
@@ -108,6 +125,15 @@
   </style>
 </head>
 <body>
+
+  <!-- 🔹 로딩 모션 -->
+  <div id="loading-overlay">
+    <video autoplay muted loop playsinline>
+      <source src="loadingMotion1_alpha.webm" type="video/webm" />
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
   <p style="display: none;">
     This paragraph exists solely to help your web browser recognize the original language of this page as English. 
     If you are using a browser like Safari or Chrome that supports automatic translation, this content may help trigger a translation suggestion banner when the page loads. 
@@ -118,6 +144,7 @@
     We are committed to creating a more inclusive browsing experience, and small technical details like this can significantly impact the usability of a website across different languages and regions.
     Thank you for your understanding and support as we continue to optimize this project for a wider, global audience.
   </p>
+  
   <div id="top-bar">
     <a class="logo" href="index.html" translate="no">Worldwide Air</a>
 
@@ -143,14 +170,14 @@
       <select id="week">
         <option value="2025-06-W1">6월 1주차</option>
         <option value="2025-06-W2">6월 2주차</option>
-        <option value="2025-06-W3">6월 3주차</option>
-        <option value="2025-06-W4">6월 4주차</option>
+        <!-- <option value="2025-06-W3">6월 3주차</option>
+        <option value="2025-06-W4">6월 4주차</option> -->
         <option value="2025-07-W1">7월 1주차</option>
         <option value="2025-07-W2">7월 2주차</option>
         <option value="2025-07-W3">7월 3주차</option>
-        <option value="2025-07-W4">7월 4주차</option>
+        <!-- <option value="2025-07-W4">7월 4주차</option>
         <option value="2025-08-W1">8월 1주차</option>
-        <option value="2025-08-W2">8월 2주차</option>
+        <option value="2025-08-W2">8월 2주차</option> -->
       </select>
 
       <button class="search-button" type="submit">여정 검색</button>
@@ -158,14 +185,21 @@
   </div>
 
   <div id="flight-section"></div>
-
   <div id="idle-popup">10초 동안 활동이 없으면 여정 탐색이 종료됩니다.</div>
 
   <script>
+    function showLoading() {
+      document.getElementById("loading-overlay").style.display = "flex";
+    }
+    function hideLoading() {
+      document.getElementById("loading-overlay").style.display = "none";
+    }
+
+    showLoading();
+
     const urlParams = new URLSearchParams(window.location.search);
     const selectedCountry = urlParams.get("country");
     const selectedWeek = urlParams.get("week");
-
     if (selectedCountry) document.getElementById("departure-country").value = selectedCountry;
     if (selectedWeek) document.getElementById("week").value = selectedWeek;
 
@@ -178,11 +212,11 @@
       sheetName = `flight_${year.slice(2)}${month}w${week.slice(1)}`;
     } catch {
       document.getElementById("flight-section").innerHTML = `<div class="center-message">주차 형식이 잘못되었습니다.</div>`;
+      hideLoading();
       throw new Error("Invalid week format");
     }
 
     const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-
     fetch(endpoint)
       .then(res => res.json())
       .then(data => {
@@ -209,6 +243,7 @@
         const events = Object.entries(byEvent).sort(([, a], [, b]) => a.minEventRank - b.minEventRank);
         if (!events.length) {
           section.innerHTML = `<div class="center-message">항공편을 찾을 수 없습니다.</div>`;
+          hideLoading();
           return;
         }
         const title = document.createElement("div");
@@ -223,9 +258,11 @@
           block.innerHTML = `<div class="flight-title">${data.summary}</div><div class="flight-meta">검색 수: ${data.count}건</div>`;
           section.appendChild(block);
         });
+        hideLoading();
       })
       .catch(() => {
         document.getElementById("flight-section").innerHTML = `<div class="center-message">항공편을 찾을 수 없습니다.</div>`;
+        hideLoading();
       });
 
     document.getElementById("journey-form").addEventListener("submit", function (e) {
@@ -235,7 +272,7 @@
       window.location.href = `boarding.html?country=${country}&week=${week}`;
     });
 
-    // ⏱️ 비활성 감지 타이머
+    // 비활성 감지 타이머
     let idleTimer, popupTimer, redirectTimer;
     const popup = document.getElementById("idle-popup");
 
