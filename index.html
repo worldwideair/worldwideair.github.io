@@ -237,7 +237,7 @@
   </div>
 
   <video id="intro-video" muted autoplay playsinline loop>
-    <source src="testVideo.mp4" type="video/mp4">
+    <source src="WorldwideAir_Video5.mp4" type="video/mp4">
   </video>
 
   <button id="video-overlay" style="display: none;">여정을 시작하려면 클릭하세요</button>
@@ -258,24 +258,24 @@
 
     const video = document.getElementById('intro-video');
     const overlay = document.getElementById('video-overlay');
-    const soundBtn = document.getElementById('sound-toggle');
+    // const soundBtn = document.getElementById('sound-toggle');
     let inactivityTimer;
 
     function showVideo() {
       video.classList.remove('fade-out');
       overlay.classList.remove('fade-out');
-      soundBtn.classList.remove('fade-out');
+      // soundBtn.classList.remove('fade-out');
 
       video.style.display = 'block';
       overlay.style.display = 'block';
-      soundBtn.style.display = 'block';
+      // soundBtn.style.display = 'block';
       video.play();
     }
 
     function hideVideo() {
       video.classList.add('fade-out');
       overlay.classList.add('fade-out');
-      soundBtn.classList.add('fade-out');
+      // soundBtn.classList.add('fade-out');
 
       setTimeout(() => {
         location.reload();  // ⬅️ 영상이 꺼지는 대신 페이지 새로고침
@@ -284,9 +284,9 @@
 
     overlay.addEventListener('click', hideVideo);
 
-    soundBtn.addEventListener('click', () => {
-      video.muted = false;
-    });
+    // soundBtn.addEventListener('click', () => {
+    //   video.muted = false;
+    // });
 
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
