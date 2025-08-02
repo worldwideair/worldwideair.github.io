@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta http-equiv="Content-Language" content="en">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>여정 도착 - Worldwide Air</title>
@@ -12,6 +12,25 @@
       padding: 2rem;
       background-color: #f4f4f4;
       position: relative;
+    }
+
+    /* 🔹 로딩 오버레이 */
+    #loading-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000; /* 👈 팝업보다 낮게 유지 */
+    }
+
+    #loading-overlay video {
+      width: 250px;
+      height: auto;
+      pointer-events: none;
     }
 
     #top-bar {
@@ -154,6 +173,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.15);
       z-index: 1000;
     }
+
     #initial-popup {
       position: fixed;
       top: 0;
@@ -164,7 +184,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 999;
+      z-index: 3000; /* 👈 가장 위로 올림 */
     }
 
     #initial-popup-content {
@@ -189,6 +209,15 @@
   </style>
 </head>
 <body>
+
+  <!-- 🔹 로딩 모션 -->
+  <div id="loading-overlay">
+    <video autoplay muted loop playsinline>
+      <source src="loadingMotion2_alpha.webm" type="video/webm" />
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
   <div id="initial-popup">
     <div id="initial-popup-content">
       <p><strong>안내사항</strong><br>
@@ -198,28 +227,28 @@
     </div>
   </div>
 
-  <p style="display: none;">
-    This paragraph exists solely to help your web browser recognize the original language of this page as English. 
-    If you are using a browser like Safari or Chrome that supports automatic translation, this content may help trigger a translation suggestion banner when the page loads. 
-    This technique is especially useful in cases where the visible content of the page is minimal, dynamically generated, or primarily written in another language such as Korean or Japanese. 
-    By including this clearly written, well-formed English text in the source code, we ensure that language detection algorithms can accurately identify the document's primary language. 
-    This, in turn, allows the browser to offer translation options to users whose browser interface is set to a different language.
-    Even though this text is completely hidden from your view and does not interfere with the visible layout or user experience, it plays a subtle yet important role in improving accessibility and multilingual support.
-    We are committed to creating a more inclusive browsing experience, and small technical details like this can significantly impact the usability of a website across different languages and regions.
-    Thank you for your understanding and support as we continue to optimize this project for a wider, global audience.
-  </p>
+  <p style="display: none;">This paragraph exists solely to help...</p>
+
   <div id="top-bar">
     <a class="logo" href="index.html" translate="no">Worldwide Air</a>
     <button class="back-button" onclick="history.back()">뒤로</button>
   </div>
 
   <div class="section-title">도착지의 장면들</div>
-
   <div id="article-results"></div>
-
   <div id="idle-popup">10초 동안 활동이 없으면 여정 탐색이 종료됩니다.</div>
 
   <script>
+    function showLoading() {
+      document.getElementById("loading-overlay").style.display = "flex";
+    }
+
+    function hideLoading() {
+      document.getElementById("loading-overlay").style.display = "none";
+    }
+
+    showLoading(); // 로딩 시작
+
     const params = new URLSearchParams(window.location.search);
     const selectedCountry = params.get("country");
     const selectedWeek = params.get("week");
@@ -234,6 +263,7 @@
       sheetName = `flight_${year.slice(2)}${month}w${week.slice(1)}`;
     } catch {
       document.getElementById("article-results").innerHTML = "<p class='center-message'>주차 정보가 올바르지 않습니다.</p>";
+      hideLoading();
       throw new Error("Invalid week format");
     }
 
@@ -246,10 +276,6 @@
       })
       .then(data => {
         const rows = data.values;
-        if (!rows || !Array.isArray(rows) || rows.length < 2) {
-          throw new Error("Sheet is empty or invalid data");
-        }
-
         const headers = rows[0];
         const body = rows.slice(1);
         const col = name => headers.indexOf(name);
@@ -263,6 +289,7 @@
 
         if (filtered.length === 0) {
           container.innerHTML = "<p class='center-message'>기사를 찾을 수 없습니다.</p>";
+          hideLoading();
           return;
         }
 
@@ -290,13 +317,21 @@
           `;
           container.appendChild(ticket);
         });
+
+        hideLoading();
       })
       .catch(err => {
         console.error("데이터 불러오기 실패:", err);
         document.getElementById("article-results").innerHTML = "<p class='center-message'>기사를 불러오는 데 실패했습니다.</p>";
+        hideLoading();
       });
 
-    // ⏱️ 비활성 감지 타이머
+    function closeInitialPopup() {
+      document.getElementById('initial-popup').style.display = 'none';
+    }
+
+    setTimeout(closeInitialPopup, 10000); // 자동 닫힘
+
     let idleTimer, popupTimer, redirectTimer;
     const popup = document.getElementById("idle-popup");
 
@@ -315,15 +350,6 @@
         }, 9000);
       }, 30000);
     }
-
-    function closeInitialPopup() {
-      const popup = document.getElementById('initial-popup');
-      popup.style.display = 'none';
-    }
-
-    setTimeout(() => {
-      closeInitialPopup();
-    }, 10000); // 10초 후 자동 닫힘
 
     ["mousemove", "mousedown", "keydown", "touchstart"].forEach(evt =>
       document.addEventListener(evt, resetTimers)
