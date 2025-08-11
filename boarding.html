@@ -129,7 +129,10 @@
   <!-- 🔹 로딩 모션 -->
   <div id="loading-overlay">
     <video autoplay muted loop playsinline>
-      <source src="loadingMotion1_alpha.webm" type="video/webm" />
+      <!-- iOS용 HEVC 알파 MOV -->
+      <source src="loadingMotion1_alpha.mov" type="video/quicktime">
+      <!-- 크롬·엣지·안드로이드용 WebM 알파 -->
+      <source src="loadingMotion1_alpha.webm" type="video/webm">
       Your browser does not support the video tag.
     </video>
   </div>
